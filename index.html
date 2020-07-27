@@ -1,0 +1,89 @@
+<html>
+
+<head>
+  <title>FiDL - Atari Display List Builder</title>
+  <script src='https://code.jquery.com/jquery-latest.min.js' type='text/javascript'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.js' type='text/javascript'></script>
+  <script src="https://kit.fontawesome.com/fa40a238b2.js" crossorigin="anonymous"></script>
+  <link rel='stylesheet' type='text/css' href='css/style.css'>
+</head>
+
+<body>
+  <div id='app'>
+    <ul id='listmenu' class='menulist'></ul>
+
+    <div class='listRow listHeaders'>
+      <div>mode</div>
+      <div>count</div>
+      <div>DLI</div>
+      <div>H-SCR</div>
+      <div>V-SCR</div>
+      <div>LMS</div>
+      <div>address</div>
+    </div>
+    <ul class='dlist' id='dlist'></ul>
+    <ul class='dlist' id='dljump'></ul>
+
+    <div id='status'>
+      <div id='sizes'></div>
+      <div id='state'></div>
+      <div id='warnings'></div>
+    </div>
+  </div>
+  
+  
+  <div id='export_dialog' class='dialog'>
+      <div class='dialog_title'>Export</div>
+      <div class='dialog_content'>
+        <div class='dialog_blocks'>
+          <div class='dialog_block'>
+            <fieldset>
+              <label class='dialog_label'>Template:</label>
+              <select id='export_template' class='dialog_text_input'>
+              </select>
+            </fieldset>
+            <textarea id='export_frame'></textarea>
+            <hr>
+          </div>
+
+        </div>
+        <div class='menuitem clear_left' id='close_export'>Close</div>
+      </div>
+  </div>
+
+  
+  <div id='options_dialog' class='dialog'>
+      <div class='dialog_title'>Options</div>
+      <div class='dialog_content'>
+        <div class='dialog_blocks'>
+          <div class='dialog_block'>
+            <fieldset>
+              <label class='dialog_label'>Screen width:</label>
+              <select id='scr_width' class='dialog_text_input'>
+              </select>
+            </fieldset>
+            <fieldset>
+              <label class='dialog_label'>Export bytes as:</label>
+              <select id='bytes_export' class='dialog_text_input'>
+                  <option value='HEX'>HEX</option>
+                  <option value='DEC'>DEC</option>
+              </select>
+            </fieldset>
+            <fieldset>
+              <label class='dialog_label'>Bytes per line:</label>
+              <input type='text' id='bytes_per_line' class='dialog_text_input input_narrow'>
+            </fieldset>
+            <hr>
+          </div>
+        </div>
+        <div class='menuitem clear_left' id='save_options'>Save</div>
+      </div>
+  </div>
+
+
+  <script src='js/exportTemplates.js' type='text/javascript'></script>
+  <script src='js/gui.js' type='text/javascript'></script>
+  <script src='js/app.js' type='text/javascript'></script>
+</body>
+
+</html>

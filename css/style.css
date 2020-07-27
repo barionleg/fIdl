@@ -1,0 +1,291 @@
+* {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2em;
+  border:0;
+}
+
+body {
+  background-color: rgb(24, 50, 56);
+  color:#ccc;
+  font-family: Arial, sans-serif;
+  margin:10px 10px;
+}
+
+.menulist {
+  display: block;
+  overflow: auto;
+  margin-bottom: 6px;
+  border-bottom: 1px dotted #666;
+  width: 100%;
+}
+
+#main {
+  clear: both;
+}
+
+ul.dlist {
+  list-style: none;
+  display: block;
+}
+
+ul.dlist>li {
+  display:block;
+  list-style: none;
+  clear:left;
+  background: rgb(38, 77, 85);
+  overflow: auto;
+}
+
+.listRow {
+  max-width: 664px;
+  margin: 0 0 2px 0;
+}
+
+.listRow>i {
+  display: block;
+  font-size: 20px;
+  margin: 3px 0px 0 15px!important;
+  cursor: pointer;
+}
+
+
+.listHeaders>* {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.listRow>*:nth-child(1) {
+  width:200px;
+  text-align: left;
+}
+
+.listRow>*:nth-child(2) {
+  width:40px;
+}
+
+.listRow>*:nth-child(3),
+.listRow>*:nth-child(4),
+.listRow>*:nth-child(5),
+.listRow>*:nth-child(6)
+{
+  width:40px;
+  text-align: center;
+  font-size: 10px;
+  line-height: 18px;
+}
+
+.listRow>*:nth-child(7) {
+  width:100px;
+}
+
+.listRow:first-child>i.arrowUp,
+.listRow:last-child>i.arrowDown {
+  opacity: 0;
+  cursor: default;
+}
+
+ul.dlist>li>* , .listHeaders>* {
+  display:block;
+  float:left;
+  margin: 3px 3px;
+  height:20px;
+  text-align: right;
+}
+
+.menuitem {
+  display: block;
+  float: left;
+  padding: 2px 6px;
+  background-color: #aaa;
+  color: #222  !important;
+  cursor: pointer;
+  margin-right: 5px;
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #666;
+  border-bottom: 1px solid #666;
+  border-radius: 4px;
+  text-shadow:  1px 1px 0px #ccc;
+  font-size: 14px;
+  height: 15px;
+  line-height: 1em;
+  margin-bottom: 6px;
+  font-family: Arial, helvetica, sans-serif;
+  font-weight: bold;
+}
+
+.menuseparator {
+  display: block;
+  float: left;
+  width: 0px;
+  height:16px;
+  margin: 2px 7px 0 2px;
+  border-left: 1px solid #666;
+  border-right: 1px dotted #888;
+}
+
+.menubr {
+  clear: left;
+  display: block;
+  float: left;
+  width: 0px;
+  height: auto;
+  padding-top:10px;
+}
+
+
+.break {
+  clear: left;
+}
+
+.fleft {
+  float: left;
+}
+
+.fright {
+  float: right;
+}
+
+.block {
+  display: block;
+}
+
+.green {
+  color: #8f8;
+}
+
+.red {
+  color: #f88;
+}
+
+.blue {
+  color: #88f;
+}
+
+pre {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.dialog {
+    position:absolute;
+    display:none;
+    background:rgb(138, 180, 187);
+    color:#000;
+    border-radius:5px;
+    box-shadow: 0 0 4px #000;
+    border: 2px solid #000;
+    overflow:hidden;
+    font-size:12px;
+}
+
+#options_dialog {
+    top: 44px;
+    left:474px;
+}
+
+#export_dialog {
+    top: 44px;
+    left:103px;
+    width:580px;
+}
+
+#export_frame {
+  margin: 5px 0;
+  width:560px;
+  min-height:300px;
+}
+
+.dialog_title {
+    position:relative;
+    width:100%;
+    background:rgb(54, 81, 87);
+    color:rgb(138, 180, 187);
+    text-align: center;
+    margin-bottom:5px;
+    padding:3px;
+    font-weight:bold;
+}
+
+.dialog_content {
+    padding:10px;
+}
+
+.dialog_label {
+    padding-top:4px;
+    display:block;
+    float: left;
+    width: 120px;
+}
+
+fieldset, hr {
+  margin-bottom:4px;
+}
+
+.dialog_text_input {
+    border:1px solid #888;
+    padding:2px;
+}
+
+
+.dialog_block {
+    display: block;
+    float: left;
+}
+
+.dialog_block:not(:last-child) {
+    margin-right:10px;
+    padding-right:10px;
+    border-right:1px solid #454;
+}
+
+.clear_left {
+    clear:left;
+}
+
+.input_narrow {
+    width: 40px;
+}
+
+.input_narrows {
+    width: 50px;
+}
+
+hr {
+    border-bottom: 1px dotted #787;
+    width:100%;
+}
+
+input:disabled {
+  opacity: 0.3;
+}
+
+#status {
+  margin: 5px 0;
+  width:664px;
+  /*background-color: #88f;*/
+}
+
+#sizes {
+  float: right;
+  text-align: right;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+#state {
+  float: left;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+#warnings {
+  clear: left;
+  font-size: 12px;
+  color: #f88;
+  line-height: 1.6em;
+}
+
+.rowError {
+  background-color: rgb(75, 46, 46)!important;
+}
