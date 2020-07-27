@@ -1,5 +1,3 @@
-
-
 const defaultOptions = {
     version: '0.80',
     storageName: 'FidlStore080',
@@ -9,13 +7,9 @@ const defaultOptions = {
     lastTemplate: 0
 }
 let options = {};
-
 const dontSave = ['version', 'storageName'];
-
 const scanlinesMax = 240;
 const maxRamSize = 4096;
-const CSVbytesPerLine = 10;
-
 const defaultDisplay = {
     list: [],
     jump: null,
@@ -23,8 +17,9 @@ const defaultDisplay = {
     videoram: 0,
     bytecode: []
 }
-
 let display = {}
+
+// ******************************* HELPERS
 
 function decimalToHex(d, padding) {
     var hex = Number(d).toString(16);
@@ -56,16 +51,6 @@ const userIntParse = (udata) => {
     } else {
         return NaN;
     }
-}
-
-const promptInt = (txt, defaulttxt) => {
-    let uint;
-    do {
-        const uval = prompt(txt, defaulttxt);
-        uint = userIntParse(uval);
-        if (_.isNaN(uint)) alert(`*** ERROR: can not parse integer value from ${uval}`);
-    } while (_.isNaN(uint))
-    return uint;
 }
 
 // *********************************** DLIST
@@ -441,69 +426,8 @@ const parseAndValidate = (template) => {
 
     }
 
-
-  return {error: DLerror, warnings}
+    return {error: DLerror, warnings}
 }
-
-
-const commentIndent = 24;
-
-const parseToAsm = dlist => {
-  outText = "display_list\n";
-  dlist.forEach((row) => {
-    outputLine = `    ${row.count>1?':'+row.count+' ':''}dta $${row.hex}${row.address?', a('+row.address+')':''}`;
-    comment = `${' '.repeat(outputLine.length<commentIndent?commentIndent-outputLine.length:1)}; ${row.name} ${row.count>1?'x'+row.count:''}\n`
-    outText += outputLine + comment;
-  });
-  return outText;
-}
-
-const showValuesArray = valuesArray => {
-  outText = '';
-  rowText = '';
-  lineCount = 0;
-  
-  valuesArray.forEach( v => {
-      rowText += `${v}, `;
-      lineCount++;
-      if (lineCount == CSVbytesPerLine) {
-        lineCount = 0;
-        outText += rowText + "\n";  
-        rowText = '';
-      }
-  });
-  outText += rowText;  
-  return outText.slice(0, -2);
-}
-
-const parseToCSVdec = dlist => {
-  valuesArray = [];
-  dlist.forEach( row => {
-    for (var i=1;i<=row.count;i++)  
-      valuesArray.push(row.antic);
-    if (hasAddress(row)) {
-      address = parseAddress(row);
-      valuesArray.push(address.lo);
-      valuesArray.push(address.hi);
-    }
-  });
-  return showValuesArray(valuesArray);
-}
-
-const parseToCSVhex = dlist => {
-  valuesArray = [];
-  dlist.forEach( row => {
-    for (var i=1;i<=row.count;i++)  
-  valuesArray.push(`$${row.hex}`);
-    if (hasAddress(row)) {
-      address = parseAddress(row);
-      valuesArray.push(`$${address.lo.toString(16).padStart(2, '0')}`);
-      valuesArray.push(`$${address.hi.toString(16).padStart(2, '0')}`);
-    }
-  });
-  return showValuesArray(valuesArray);
-}
- 
 
 // *********************************** OPTIONS
 
@@ -565,7 +489,6 @@ const loadDisplay = () => {
     }
 }
 
-
 const updateOptions = () => {
     _.assignIn(options, {
         screenWidth: $('#scr_width').val(),
@@ -575,7 +498,6 @@ const updateOptions = () => {
     });
     storeOptions();
 }
-
 
 const saveOptions = () => {
     if (validateOptions()) {
@@ -630,7 +552,6 @@ const exportData = () => {
     $('#export_frame').html(body);
 }
 
-
 const parseTemplateVars = (template, size) => {
     return template
         .replace(/#size#/g, size)
@@ -638,7 +559,7 @@ const parseTemplateVars = (template, size) => {
 }
 
 const parseTemplate = (template) => {
-    
+   
     let templateLines = '';
     let listByte = 0;
     let byteInRow = 0;
@@ -698,9 +619,6 @@ const parseTemplate = (template) => {
 }
 
 
-
-
-
 // ************************************************  ON START INIT 
 
 $(document).ready(function () {
@@ -722,4 +640,4 @@ $(document).ready(function () {
     if (display.list.length > 0) redrawList()
     else addJump();
     updateListStatus();    
-  });
+});

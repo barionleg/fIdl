@@ -25,7 +25,6 @@ const gui = (options) => {
         $('#scr_width').append($('<option/>').attr('value',k).html(k));
     });
 
-
     return {
         addMenuItem,
         addSeparator,
