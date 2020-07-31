@@ -1,9 +1,12 @@
 const defaultOptions = {
-    version: '0.80',
-    storageName: 'FidlStore080',
+    version: '0.86',
+    storageName: 'FidlStore086',
     screenWidth: 'normal',
     bytesExport: 'HEX',
     bytesPerLine: 10,
+    validate4KBlockSize: true,
+    validateEndJump: true,
+    validateFirstLMS: true,
     lastTemplate: 0
 }
 let options = {};
@@ -12,7 +15,6 @@ const scanlinesMax = 240;
 const maxRamSize = 4096;
 const defaultDisplay = {
     list: [],
-    jump: null,
     scanlines: 0,
     videoram: 0,
     bytecode: []
@@ -57,9 +59,7 @@ const userIntParse = (udata) => {
 
 const redrawList = () => {
     $("#dlist").empty();
-    $("#dljump").empty();
     _.each(display.list,line => guiAddDLLine(line));
-    addJump();
 } 
 
 const updateModeParams = line => {
@@ -68,7 +68,8 @@ const updateModeParams = line => {
     line.scanlines = DLmodes[line.mode].scanlines * line.count || 0;
     let bpl = DLmodes[line.mode].bpl;
     let b20 = bpl / 5;
-    if (options.screenWidth == 'narrow') bpl = bpl - b20;
+    if ((options.screenWidth == 'narrow') && (!line.hscroll)) bpl = bpl - b20;
+    if ((options.screenWidth == 'normal') && (line.hscroll)) bpl = bpl + b20;
     if (options.screenWidth == 'wide') bpl = bpl + b20;
     line.ram = bpl * line.count || 0;
     return line;
@@ -132,11 +133,11 @@ const updateLineFromRow = id => {
 
 const rowChanged = (e) => {
     const rowId = $(e.target).parent().attr('id').split('_')[1];
-    if (rowId == 'jmp') {
-        display.jump = _.assign(display.jump, readRow(rowId))
-    } else {
+    //if (rowId == 'jmp') {
+    //    display.jump = _.assign(display.jump, readRow(rowId))
+    //} else {
         updateLineFromRow(Number(rowId));
-    }
+    //}
     updateListStatus();
 }
 
@@ -231,13 +232,13 @@ const guiAddDLLine = (line, list = '#dlist') => {
         .append(rowCheckbox(line,'LMS',line.LMS)
             .attr('title','Load Memory Scan')
             .attr("disabled", isBlank(line) || isJump(line)))
-        .append(rowInput(line,'address', line.address).attr("disabled", isBlank(line)));
-        if (!isJump(line)) {
-          lineItem
+        .append(rowInput(line,'address', line.address).attr("disabled", isBlank(line)))
+        //if (!isJump(line)) {
+        //  lineItem
           .append(rowIcon(line,'arrowDown fa-arrow-alt-circle-down',moveRowDown).attr('title','Move Down'))
           .append(rowIcon(line,'arrowUp fa-arrow-alt-circle-up',moveRowUp).attr('title','Move Up'))
           .append(rowIcon(line,'fa-ban',removeRow).attr('title','Delete Row'));
-        }
+        //}
     $(list).append(lineItem);
 }
 
@@ -253,6 +254,12 @@ const addBlankLine = () => {
   updateListStatus();
 };
 
+const addJumpLine = () => {
+    display.list.push(newScreenLine('JVB'));
+    guiAddDLLine(_.last(display.list));
+    updateListStatus();
+  };
+
 const cloneLastLine = () => {
     if (display.list.length>0) {
         const rowClone = _.clone(_.last(display.list));
@@ -263,15 +270,10 @@ const cloneLastLine = () => {
     }
 }
 
-const addJump = (jump) => {
-  display.jump = jump || display.jump || newScreenLine('JVB','jmp');
-  guiAddDLLine(display.jump, '#dljump');
-}
-
 const clearDL = () => {
     if (confirm('Are You sure??')) {
-        display = _.assignIn({}, defaultDisplay);
-        redrawList()
+        display = _.assignIn({}, _.cloneDeep(defaultDisplay));
+        redrawList();
     }
     updateListStatus();
 };
@@ -376,6 +378,7 @@ const parseAndValidate = (template) => {
     display.bytecode = [];
     let line = 0;
     let firstLine = true;
+    let hasJump = false;
     $('li').removeClass('rowError');
     
     for (line of display.list) {
@@ -391,10 +394,12 @@ const parseAndValidate = (template) => {
         if (needsAddress(line)) videoram = 0;
         videoram += line.ram;
         if (videoram > maxRamSize) 
-            addError(`Error! You have exceeded the maximum size of continuous memory block! (max. ${maxRamSize} bytes).`, line.id);
+            if (options.validate4KBlockSize)
+                addError(`Error! You have exceeded the maximum size of continuous memory block! (max. ${maxRamSize} bytes).`, line.id);
 
         if (isScreenLine(line) && firstLine) {
-            if (!needsAddress(line)) addError(`Error! First screen line has to point to a memory address (LMS) - ${line.mode}.`, line.id);
+            if (options.validateFirstLMS)
+                if (!needsAddress(line)) addError(`Error! First screen line has to point to a memory address (LMS) - ${line.mode}.`, line.id);
             firstLine = false;
         }
               
@@ -405,26 +410,20 @@ const parseAndValidate = (template) => {
             if (template.byte.forceNumeric) isAddressParsable(line);
         }
 
+        if (isJump(line)) {
+            hasJump = true;
+        }
+
         if (DLerror) return {error: DLerror, warnings}
 
         display.bytecode.push(_.times(line.count, i => getLineBytecode(line)));
     }    
 
-
-    display.bytecode.push(getLineBytecode(display.jump));
+    if (!hasJump)
+        if (options.validateEndJump)
+            addError(`Error! No Jump Command in your list.`);
 
     display.bytecode = _.flattenDeep(display.bytecode);
-   
-    if (display.bytecode.length > 256)
-        addError(`Error! Display List size exceeded 256 bytes! Split it using JMP.`);
-
-    if (!hasAddress(display.jump) )
-        addError(`Error! No address for Jump Command ${display.jump.mode}.`, display.jump.id);
-    
-    if (hasAddress(display.jump) && template) {
-        if (template.byte.forceNumeric) isAddressParsable(display.jump);
-
-    }
 
     return {error: DLerror, warnings}
 }
@@ -432,9 +431,21 @@ const parseAndValidate = (template) => {
 // *********************************** OPTIONS
 
 const refreshOptions = () => {
-    $('#scr_width').val(options.screenWidth);
-    $('#bytes_export').val(options.bytesExport);
-    $('#bytes_per_line').val(options.bytesPerLine);
+
+    const opts = _.filter($("select, input"), opt => {
+        return _.startsWith($(opt).attr('id'),'opt_');
+    });
+    const newopts = {};
+    _.each(opts, opt => {
+        const opt_id = $(opt).attr('id');
+        const opt_name = _.split(opt_id ,'_');
+        const opt_type = opt_name[2];
+        const opt_val = options[opt_name[1]];
+        $(`#${opt_id}`).val(opt_val);
+        if (opt_type == 'b') {
+            $(`#${opt_id}`).prop('checked', opt_val);
+        }
+    });
 }
 
 const valIntInput = (inputId) => {
@@ -449,7 +460,7 @@ const valIntInput = (inputId) => {
 
 const validateOptions = () => {
     $('.dialog_text_input').removeClass('warn');
-    if (!valIntInput('bytes_per_line')) return false;
+    //if (!valIntInput('bytes_per_line')) return false;
     return true;
 }
 
@@ -481,21 +492,36 @@ const loadOptions = () => {
 
 const loadDisplay = () => {
     if (!localStorage.getItem(`${defaultOptions.storageName}_DL`)) {
-        display = _.assignIn({}, defaultDisplay);
+        display = _.assignIn({}, _.clone(defaultDisplay));
         storeDisplay();
     } else {
-        display = _.assignIn({}, defaultDisplay, JSON.parse(localStorage.getItem(`${defaultOptions.storageName}_DL`)));
+        display = _.assignIn({}, _.clone(defaultDisplay), JSON.parse(localStorage.getItem(`${defaultOptions.storageName}_DL`)));
 
     }
 }
 
 const updateOptions = () => {
-    _.assignIn(options, {
-        screenWidth: $('#scr_width').val(),
-        bytesExport: $('#bytes_export').val(),
-        lastTemplate: Number($('#export_template').val()),
-        bytesPerLine: Number($('#bytes_per_line').val())
+
+    const opts = _.filter($("select, input"), opt => {
+        return _.startsWith($(opt).attr('id'),'opt_');
     });
+    const newopts = {};
+    _.each(opts, opt => {
+        const opt_id = $(opt).attr('id');
+        const opt_name = _.split(opt_id ,'_');
+        let opt_value =  $(`#${opt_id}`).val();
+        const opt_type = opt_name[2];
+        if (opt_type == 'i') {
+            newopts[opt_name[1]] = Number(opt_value);
+        };
+        if (opt_type == 's') {
+            newopts[opt_name[1]] = `${opt_value}`;
+        };
+        if (opt_type == 'b') {
+            newopts[opt_name[1]] = $(`#${opt_id}`).prop('checked');
+        };        
+    })
+    _.assignIn(options, newopts);
     storeOptions();
 }
 
@@ -509,16 +535,6 @@ const saveOptions = () => {
 
 // *********************************** EXPORT
 
-const refreshExports = () => {
-    $('#export_template').empty();
-    for (let templateIdx in exportTemplates) {
-        const template = exportTemplates[templateIdx];
-        const option = $('<option/>').val(templateIdx).html(template.name);
-        $('#export_template').append(option);
-    };
-    $('#export_template').val(options.lastTemplate);
-    //
-}
 
 const templateChange = () => {
     updateOptions();
@@ -535,14 +551,14 @@ const toggleExport = () => {
     if ($('#export_dialog').is(':visible')) {
         $('#export_dialog').slideUp();
     } else {
-        refreshExports();
+        refreshOptions();
         exportData();
         $('#export_dialog').slideDown();
     }
 }
 
 const exportData = () => {
-    const template = exportTemplates[$('#export_template').val()];
+    const template = exportTemplates[$('#opt_lastTemplate_i').val()];
     const {error, warnings} = parseAndValidate(template);
     if (error) {
         $('#export_frame').html(warnings.replace('<br>',''));
@@ -618,6 +634,60 @@ const parseTemplate = (template) => {
     return parseTemplateVars(`${template.block.prefix}${templateLines}${template.block.postfix}`, display.bytecode.length);
 }
 
+const saveFile = () => {
+    bintmp = {
+        name:'Binary Export',
+        block: {
+            prefix: '', postfix: ''
+        },
+        line: {
+            numbers: false,
+            prefix: '', postfix: ','
+        },
+        byte: {
+            forceNumeric: true, separator: ',',
+            hexPrefix: '$'
+        }
+    };
+    const {error, warnings} = parseAndValidate(bintmp);
+    if (error) {
+        alert(warnings.replace('<br>',''));
+        return null;
+    }
+
+    if (display.bytecode.length == 0) {
+        alert('Saving empty file is pointless...');
+        return null;
+    }
+
+    const name = prompt('set filename of saved file:', 'display_list.bin');
+
+    let binList = [];
+    let listByte = 0;
+    while (listByte<display.bytecode.length) {
+        let cbyte = display.bytecode[listByte++];
+        if (cbyte == '#') {
+            let caddr = display.bytecode[listByte];
+            let address = Number(userIntParse(caddr));
+            binList.push(address & 0xFF);
+            listByte++;
+            binList.push((address & 0xFF00)>>8);
+        } else {
+            binList.push(Number(userIntParse(cbyte)) & 0xFF);
+        }
+    }
+    var a = document.createElement('a');
+    document.body.appendChild(a);
+    var file = new Blob([new Uint8Array(binList)]);
+    a.href = URL.createObjectURL(file);
+    if (name) {
+        a.download = name;
+        a.click();
+        setTimeout(() => { $(a).remove(); }, 100);
+    }
+}
+
+
 
 // ************************************************  ON START INIT 
 
@@ -625,19 +695,20 @@ $(document).ready(function () {
     loadOptions();
     loadDisplay();
     const app = gui(options);
-    refreshExports();
     refreshOptions();
     $('title').append(` v.${options.version}`);
     app.addMenuItem('New Blank Line', addBlankLine, 'listmenu', 'Inserts blank line into Display List');
     app.addMenuItem('New Screen Line', addScreenLine, 'listmenu', 'Inserts screen line into Display List');
+    app.addMenuItem('New Jump Line', addJumpLine, 'listmenu', 'Inserts jump line into Display List');
     app.addMenuItem('Clone Last Line', cloneLastLine, 'listmenu', 'Duplicate last DL Line');
     app.addSeparator('listmenu');
     app.addMenuItem('Clear Display List', clearDL, 'listmenu', 'Deletes all rows');
     app.addSeparator('listmenu');
     app.addMenuItem('Export', toggleExport, 'listmenu', 'Exports Display List to various formats');
+    app.addMenuItem('Save binary', saveFile, 'listmenu', 'Saves Display List as a binary file');
     app.addSeparator('listmenu');
     app.addMenuItem('Options', toggleOptions, 'listmenu', 'Shows Options');
     if (display.list.length > 0) redrawList()
-    else addJump();
+    
     updateListStatus();    
 });

@@ -22,7 +22,6 @@
       <div>address</div>
     </div>
     <ul class='dlist' id='dlist'></ul>
-    <ul class='dlist' id='dljump'></ul>
 
     <div id='status'>
       <div id='sizes'></div>
@@ -38,7 +37,7 @@
           <div class='dialog_block'>
             <fieldset>
               <label class='dialog_label'>Template:</label>
-              <select id='export_template' class='dialog_text_input'>
+              <select id='opt_lastTemplate_i' class='dialog_text_input'>
               </select>
             </fieldset>
             <textarea id='export_frame'></textarea>
@@ -57,20 +56,25 @@
           <div class='dialog_block'>
             <fieldset>
               <label class='dialog_label'>Screen width:</label>
-              <select id='scr_width' class='dialog_text_input'>
+              <select id='opt_screenWidth_s' class='dialog_text_input'>
               </select>
             </fieldset>
             <fieldset>
               <label class='dialog_label'>Export bytes as:</label>
-              <select id='bytes_export' class='dialog_text_input'>
+              <select id='opt_bytesExport_s' class='dialog_text_input'>
                   <option value='HEX'>HEX</option>
                   <option value='DEC'>DEC</option>
               </select>
             </fieldset>
             <fieldset>
               <label class='dialog_label'>Bytes per line:</label>
-              <input type='text' id='bytes_per_line' class='dialog_text_input input_narrow'>
+              <input type='text' id='opt_bytesPerLine_i' class='dialog_text_input input_narrow'>
             </fieldset>
+            <hr>
+            <h3>Validations:</h3>
+            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateEndJump_b'/>Ending jump mandatory</label>
+            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateFirstLMS_b'/>First LMS mandatory</label>
+            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate4KBlockSize_b'/>4KB block size limit</label>
             <hr>
           </div>
         </div>
