@@ -1,6 +1,6 @@
 const defaultOptions = {
-    version: '0.86',
-    storageName: 'FidlStore086',
+    version: '0.88',
+    storageName: 'FidlStore088',
     screenWidth: 'normal',
     bytesExport: 'HEX',
     bytesPerLine: 10,
@@ -66,6 +66,7 @@ const updateModeParams = line => {
     line.antic = DLmodes[line.mode].antic;
     line.hex = decimalToHex(line.antic);
     line.scanlines = DLmodes[line.mode].scanlines * line.count || 0;
+    if (isJump(line)) line.scanlines = 1;
     let bpl = DLmodes[line.mode].bpl;
     let b20 = bpl / 5;
     if ((options.screenWidth == 'narrow') && (!line.hscroll)) bpl = bpl - b20;

@@ -190,11 +190,47 @@ pre {
     width:580px;
 }
 
+#crt_view {
+  display: none;
+  position: absolute;
+  top: 48px;
+  left:700px;
+  width:412px;
+  height: 330px;
+}
+
+#crt_frame {
+  position: absolute;
+  top: 0px;
+  left:0px;
+  width:412px;
+  height: 330px;
+}
+  
+#screen_back{
+  position: relative;
+  margin: 24px auto;
+  width:370px;
+  height: 258px;
+  background-color: #010f0f;
+  padding-top: 20px;
+  }
+
+#antic_view {
+position: relative;
+margin: 0px auto;
+width:320px;
+height: 240px;
+background-color: darkslategrey;
+}
+
 #export_frame {
   margin: 5px 0;
   width:560px;
   min-height:300px;
 }
+
+
 
 .dialog_title {
     position:relative;
