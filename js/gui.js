@@ -34,6 +34,7 @@ const gui = (options) => {
         $('#opt_lastTemplate_i').append(option);
     };
 
+
     return {
         addMenuItem,
         addSeparator,

@@ -79,6 +79,10 @@ ul.dlist>li {
   width:100px;
 }
 
+.addrstep {
+  width:3em;
+}
+
 .listRow:first-child>i.arrowUp,
 .listRow:last-child>i.arrowDown {
   opacity: 0;
@@ -265,6 +269,16 @@ overflow: hidden;
 .line_8_BLANKS         { height: 8px; }
 .line_JMP              { height: 1px; }
 .line_JVB              { height: 1px; }
+
+
+
+
+.sortable-ghost { 
+  background-color: rgb(143, 155, 158)!important;
+  box-shadow: 0 0 2px 2px rgb(143, 155, 158);
+}
+
+
 
 .dialog_title {
     position:relative;

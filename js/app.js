@@ -1,6 +1,6 @@
 const defaultOptions = {
-    version: '0.90',
-    storageName: 'FidlStore090',
+    version: '0.91',
+    storageName: 'FidlStore091',
     screenWidth: 'normal',
     bytesExport: 'HEX',
     bytesPerLine: 10,
@@ -96,7 +96,8 @@ const newScreenLine  = (mode, id) => {
         vscroll: false,
         LMS: false,
         DLI: false,
-        address: ''
+        address: '',
+        step: '0'
     });
 }
 
@@ -114,6 +115,7 @@ const readRow = id => {
             hscroll: $(`${rowId}_hscroll`).is(":checked"),
             vscroll: $(`${rowId}_vscroll`).is(":checked"),
             address: $(`${rowId}_address`).val(),
+            step: $(`${rowId}_addrstep`).val(),
         });
     }
     return row;
@@ -153,9 +155,10 @@ const modeSelector = (line, rfilter) => {
     return select;
 }
 
-const rowInput = (line, name, dflt) => $('<input/>')
+const rowInput = (line, name, dflt, className) => $('<input/>')
         .attr('type','text')
         .attr('id',`rowId_${line.id}_${name}`)
+        .addClass(className)
         .val(dflt||'')
         .bind('change', rowChanged);
 
@@ -232,11 +235,13 @@ const guiAddDLLine = (line, list = '#dlist') => {
         .append(rowCheckbox(line,'LMS',line.LMS)
             .attr('title','Load Memory Scan')
             .attr("disabled", isBlank(line) || isJump(line)))
-        .append(rowInput(line,'address', line.address).attr("disabled", isBlank(line)))
+        .append(rowInput(line,'address', line.address).attr("disabled", (isBlank(line) || !line.LMS) && !isJump(line) ))
+        .append(rowInput(line,'addrstep', line.step, 'addrstep').attr("disabled", isBlank(line) || !line.LMS || line.count<2 ))
         //if (!isJump(line)) {
         //  lineItem
-          .append(rowIcon(line,'arrowDown fa-arrow-alt-circle-down',moveRowDown).attr('title','Move Down'))
-          .append(rowIcon(line,'arrowUp fa-arrow-alt-circle-up',moveRowUp).attr('title','Move Up'))
+        //  .append(rowIcon(line,'arrowDown fa-arrow-alt-circle-down',moveRowDown).attr('title','Move Down'))
+        //  .append(rowIcon(line,'arrowUp fa-arrow-alt-circle-up',moveRowUp).attr('title','Move Up'))
+          .append(rowIcon(line,'handle fa-sort').attr('title','drag and move'))
           .append(rowIcon(line,'fa-ban',removeRow).attr('title','Delete Row'));
         //}
     $(list).append(lineItem);
@@ -355,7 +360,7 @@ const getLineBytecode = line => {
     if (line.DLI) cmdByte |= 0b10000000;
     if (line.LMS) cmdByte |= 0b01000000;
     if (line.vscroll) cmdByte |= 0b00100000;
-    if (line.vscroll) cmdByte |= 0b00010000;
+    if (line.hscroll) cmdByte |= 0b00010000;
     bytecode.push(cmdByte);
     if (needsAddress(line)) {
         bytecode.push('#');
@@ -398,6 +403,10 @@ const parseAndValidate = (template) => {
         if (!isDecOrHexInteger(line.count)) 
             addError(`Error! Count value '${line.count}' is not an integer.`, line.id);
 
+        if (!isDecOrHexInteger(line.step)) 
+            addError(`Error! Addres step value '${line.step}' is not an integer.`, line.id);
+
+
         display.scanlines += line.scanlines;
         if (display.scanlines > scanlinesMax) 
             if (options.validateScanlinesLimit)
@@ -429,7 +438,27 @@ const parseAndValidate = (template) => {
 
         if (DLerror) return {error: DLerror, warnings}
 
-        display.bytecode.push(_.times(line.count, i => getLineBytecode(line)));
+        if (needsAddress(line) && line.count > 1 && line.step != 0) {  // step
+            display.bytecode.push(_.times(line.count, i => {
+                byteCode = getLineBytecode(line);
+                console.log(byteCode);
+                if (isDecOrHexInteger(byteCode[2])) {
+                    byteCode[2] = userIntParse(byteCode[2]) + (userIntParse(line.step)*i);
+                } else {
+                    let postfix = '';
+                    if (options.bytesExport == 'HEX') {
+                        postfix += `${template?template.byte.hexPrefix:''}${decimalToHex(userIntParse(line.step)*i)}`;
+                    } else {
+                        postfix += line.step * i;
+                    }
+                    if (i>0) byteCode[2] += `+${postfix}`;
+                }
+                return bytecode;
+            }));
+        } else {
+            display.bytecode.push(_.times(line.count, i => getLineBytecode(line)));
+        }
+        
     }    
 
     if (!hasJump)
@@ -698,13 +727,29 @@ const saveFile = () => {
         a.click();
         setTimeout(() => { $(a).remove(); }, 100);
     }
-}
+};
 
+const listRowDragged = (e) => {
+    console.log(`moved ${e.oldIndex} to ${e.newIndex}`);
+    const row = _.pullAt(display.list,e.oldIndex);
+    display.list.splice(e.newIndex,0,row[0]);
+
+    updateListStatus();
+
+}
 
 
 // ************************************************  ON START INIT 
 
 $(document).ready(function () {
+
+
+    $('#dlist').sortable({
+        handle: '.handle',
+        onUpdate: listRowDragged
+    });
+
+
     loadOptions();
     loadDisplay();
     const app = gui(options);
@@ -724,4 +769,7 @@ $(document).ready(function () {
     if (display.list.length > 0) redrawList()
     
     updateListStatus();    
+
+
+
 });

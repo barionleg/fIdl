@@ -2,7 +2,9 @@
 
 <head>
   <title>FiDL - Atari Display List Builder</title>
+  <script src="js/Sortable.js"></script>
   <script src='https://code.jquery.com/jquery-latest.min.js' type='text/javascript'></script>
+  <script src="js/jquery-sortable.js"></script>  
   <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.js' type='text/javascript'></script>
   <script src="https://kit.fontawesome.com/fa40a238b2.js" crossorigin="anonymous"></script>
   <link rel='stylesheet' type='text/css' href='css/style.css'>
@@ -20,6 +22,7 @@
       <div>V-SCR</div>
       <div>LMS</div>
       <div>address</div>
+      <div>step</div>
     </div>
     <ul class='dlist' id='dlist'></ul>
 
@@ -83,7 +86,7 @@
             <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateEndJump_b'/>Ending jump mandatory</label>
             <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateFirstLMS_b'/>First LMS mandatory</label>
             <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate4KBlockSize_b'/>4KB block size limit</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateScanlinesLimit_b'/>Validate 240 Scanlines Limit</label>
+            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateScanlinesLimit_b'/>Validate 240 scanlines limit</label>
             <hr>
           </div>
         </div>
