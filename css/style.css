@@ -83,10 +83,6 @@ ul.dlist>li {
   width:3em;
 }
 
-i.handle {
-  cursor: grab;
-}
-
 .listRow:first-child>i.arrowUp,
 .listRow:last-child>i.arrowDown {
   opacity: 0;
@@ -142,6 +138,22 @@ ul.dlist>li>* , .listHeaders>* {
   padding-top:10px;
 }
 
+.rowicon {
+  height: 20px;
+  width: 20px;
+  background-size: cover;
+  margin-left: 12px!important;
+  cursor: pointer;
+}
+
+.iconDelete {
+  background-image: url('../img/deleteIcon.png');
+}
+
+.iconMove {
+  background-image: url('../img/moveIcon.png');
+  cursor: grab!important;
+}
 
 .break {
   clear: left;

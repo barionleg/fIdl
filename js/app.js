@@ -168,8 +168,8 @@ const rowCheckbox = (line, name, state = false) =>  $('<input/>')
         .attr('id',`rowId_${line.id}_${name}`)
         .bind('change', rowChanged);
 
-const rowIcon = (line, className, handler) => $('<i/>')
-        .addClass('fas')
+const rowIcon = (line, className, handler) => $('<div/>')
+        .addClass('rowicon')
         .addClass(className)
         .bind('click', handler);
 
@@ -241,8 +241,8 @@ const guiAddDLLine = (line, list = '#dlist') => {
         //  lineItem
         //  .append(rowIcon(line,'arrowDown fa-arrow-alt-circle-down',moveRowDown).attr('title','Move Down'))
         //  .append(rowIcon(line,'arrowUp fa-arrow-alt-circle-up',moveRowUp).attr('title','Move Up'))
-          .append(rowIcon(line,'handle fa-sort').attr('title','drag and move'))
-          .append(rowIcon(line,'fa-ban',removeRow).attr('title','Delete Row'));
+          .append(rowIcon(line,'handle iconMove').attr('title','drag and move'))
+          .append(rowIcon(line,'iconDelete',removeRow).attr('title','Delete Row'));
         //}
     $(list).append(lineItem);
     const anticLine = () => $('<div/>')
@@ -441,7 +441,6 @@ const parseAndValidate = (template) => {
         if (needsAddress(line) && line.count > 1 && line.step != 0) {  // step
             display.bytecode.push(_.times(line.count, i => {
                 byteCode = getLineBytecode(line);
-                console.log(byteCode);
                 if (isDecOrHexInteger(byteCode[2])) {
                     byteCode[2] = userIntParse(byteCode[2]) + (userIntParse(line.step)*i);
                 } else {
@@ -730,12 +729,9 @@ const saveFile = () => {
 };
 
 const listRowDragged = (e) => {
-    console.log(`moved ${e.oldIndex} to ${e.newIndex}`);
     const row = _.pullAt(display.list,e.oldIndex);
     display.list.splice(e.newIndex,0,row[0]);
-
     updateListStatus();
-
 }
 
 
