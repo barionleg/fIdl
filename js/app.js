@@ -7,12 +7,20 @@ const defaultOptions = {
     validate4KBlockSize: true,
     validateEndJump: true,
     validateFirstLMS: true,
+    validateScanlinesLimit: true,
+    validateScanlinesNTSC: false,
+    validateMultiJumps: true,
+    validateLineAfterJump: true,
+    validate1Kboundary: true,
+    validate64Kaddress: true,
     lastTemplate: 0
 }
 let options = {};
 const dontSave = ['version', 'storageName'];
-const scanlinesMax = 240;
+const scanlinesMaxPAL = 240;
+const scanlinesMaxNTSC = 224;
 const maxRamSize = 4096;
+let errorRows = [];
 const defaultDisplay = {
     list: [],
     scanlines: 0,
@@ -60,6 +68,7 @@ const userIntParse = (udata) => {
 const redrawList = () => {
     $("#dlist, #antic_view").empty();
     _.each(display.list,line => guiAddDLLine(line));
+    _.each(errorRows, rowId => $(rowId).addClass('rowError'));
 } 
 
 const updateModeParams = line => {
@@ -373,20 +382,17 @@ const parseAndValidate = (template) => {
 
     let warnings = '';
     let DLerror = false;
+    errorRows = [];
     const addMsg = txt => warnings += txt + "<br>";
     const addError = (txt, rowId) => { 
         warnings += txt + "<br>"; 
         DLerror = true;
         if (!_.isUndefined(rowId)) $(`#rowId_${rowId}`).addClass('rowError');
+        errorRows.push(`#rowId_${rowId}`);
     };
     const isAddressParsable = (row) => {
-        if (!isDecOrHexInteger(row.address)) {
+        if (!isDecOrHexInteger(row.address)) 
             addError(`Error! this template needs all address fields to be numeric values. (address = ${row.address})`, row.id);
-        } else {
-            const address = userIntParse(row.address);
-            if ((address<0) || (address>65536)) 
-            addError(`Error! Address out of range!!! (address = ${row.address})`, row.id);
-        }
     }
 
     display.videoram = 0;
@@ -395,7 +401,7 @@ const parseAndValidate = (template) => {
     display.bytecode = [];
     let line = 0;
     let firstLine = true;
-    let hasJump = false;
+    let jumpCount = 0;
     $('li').removeClass('rowError');
     
     for (line of display.list) {
@@ -408,9 +414,12 @@ const parseAndValidate = (template) => {
 
 
         display.scanlines += line.scanlines;
-        if (display.scanlines > scanlinesMax) 
-            if (options.validateScanlinesLimit)
-            addError(`Error! You have exceeded the maximum number of scanlines! (max. ${scanlinesMax} lines).`, line.id);
+        if (options.validateScanlinesLimit) {
+            const scanlinesLimit = (options.validateScanlinesNTSC)?scanlinesMaxNTSC:scanlinesMaxPAL;
+            if (display.scanlines > scanlinesLimit) 
+                addError(`Error! You have exceeded the maximum number of scanlines! (max. ${scanlinesLimit} lines).`, line.id);
+        }
+
 
         display.videoram += line.ram;        
         if (needsAddress(line)) videoram = 0;
@@ -432,11 +441,32 @@ const parseAndValidate = (template) => {
             if (template.byte.forceNumeric) isAddressParsable(line);
         }
 
-        if (isJump(line)) {
-            hasJump = true;
+        if (needsAddress(line) && hasAddress(line) && options.validate64Kaddress) {
+            const address = userIntParse(line.address);
+            if ((address<0) || (address>65536)) 
+                addError(`Error! Address out of range!!! (address = ${line.address})`, line.id);
         }
 
-        if (DLerror) return {error: DLerror, warnings}
+        if (isJump(line)) {
+            jumpCount++;
+            if (jumpCount>1 && options.validateMultiJumps) 
+                addError(`Error! Second jump detected ${line.mode}`, line.id);
+
+            if (options.validate1Kboundary) {
+                if (isDecOrHexInteger(line.address)) {
+                    const addr = userIntParse(line.address);
+                    const listSize = display.bytecode.length + 3; // 3 is for this jump
+                    const boundary = (Math.floor(addr / 1024) + 1) * 1024;
+                    if (addr + listSize > boundary)
+                        addError(`Error! Basing on jump address (${line.address}) and list size (${listSize}) your display list might be crossing 1K boundary at ${boundary}.`, line.id);
+                }
+            }
+        } else {
+            if (jumpCount>0 && options.validateLineAfterJump) 
+                addError(`Error! Probably unreachable lines after jump detected ${line.mode}`, line.id);
+        }
+
+        //if (DLerror) return {error: DLerror, warnings}
 
         if (needsAddress(line) && line.count > 1 && line.step != 0) {  // step
             display.bytecode.push(_.times(line.count, i => {
@@ -458,13 +488,13 @@ const parseAndValidate = (template) => {
             display.bytecode.push(_.times(line.count, i => getLineBytecode(line)));
         }
         
+        display.bytecode = _.flattenDeep(display.bytecode);
     }    
 
-    if (!hasJump)
+    if (jumpCount==0)
         if (options.validateEndJump)
             addError(`Error! No Jump Command in your list.`);
-
-    display.bytecode = _.flattenDeep(display.bytecode);
+    
 
     return {error: DLerror, warnings}
 }
