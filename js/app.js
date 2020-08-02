@@ -1,6 +1,6 @@
 const defaultOptions = {
-    version: '0.88',
-    storageName: 'FidlStore088',
+    version: '0.90',
+    storageName: 'FidlStore090',
     screenWidth: 'normal',
     bytesExport: 'HEX',
     bytesPerLine: 10,
@@ -58,7 +58,7 @@ const userIntParse = (udata) => {
 // *********************************** DLIST
 
 const redrawList = () => {
-    $("#dlist").empty();
+    $("#dlist, #antic_view").empty();
     _.each(display.list,line => guiAddDLLine(line));
 } 
 
@@ -66,7 +66,6 @@ const updateModeParams = line => {
     line.antic = DLmodes[line.mode].antic;
     line.hex = decimalToHex(line.antic);
     line.scanlines = DLmodes[line.mode].scanlines * line.count || 0;
-    if (isJump(line)) line.scanlines = 1;
     let bpl = DLmodes[line.mode].bpl;
     let b20 = bpl / 5;
     if ((options.screenWidth == 'narrow') && (!line.hscroll)) bpl = bpl - b20;
@@ -241,6 +240,10 @@ const guiAddDLLine = (line, list = '#dlist') => {
           .append(rowIcon(line,'fa-ban',removeRow).attr('title','Delete Row'));
         //}
     $(list).append(lineItem);
+    const anticLine = () => $('<div/>')
+        .addClass('antic_line')
+        .addClass(`line_${_.replace(line.mode,/ /g,'_')}`);
+    $('#antic_view').append(_.times(line.count, anticLine));        
 }
 
 const addScreenLine = () => {
@@ -300,12 +303,20 @@ const updateSizes = () => {
         .append(`<p>DL size: ${display.bytecode.length}</p>`)
 }   
 
+const updateAnticWidth = () => {
+    let pxWidth = screenWidths[options.screenWidth]*8;
+    if (options.screenWidth == 'wide') pxWidth -= 32; // antic wide fix
+    $('#antic_view').css('width', pxWidth);
+}
+
 const updateListStatus = () => {
     const {error, warnings} = parseAndValidate();
     $('#state').html(error?'Display List ERROR!':'Display List OK');
     $('#warnings').html(warnings);
     updateSizes();
     storeDisplay();
+    updateAnticWidth();
+    redrawList();
 }
 
 const isDecOrHexInteger = v => {
@@ -389,6 +400,7 @@ const parseAndValidate = (template) => {
 
         display.scanlines += line.scanlines;
         if (display.scanlines > scanlinesMax) 
+            if (options.validateScanlinesLimit)
             addError(`Error! You have exceeded the maximum number of scanlines! (max. ${scanlinesMax} lines).`, line.id);
 
         display.videoram += line.ram;        
@@ -700,8 +712,8 @@ $(document).ready(function () {
     $('title').append(` v.${options.version}`);
     app.addMenuItem('New Blank Line', addBlankLine, 'listmenu', 'Inserts blank line into Display List');
     app.addMenuItem('New Screen Line', addScreenLine, 'listmenu', 'Inserts screen line into Display List');
-    app.addMenuItem('New Jump Line', addJumpLine, 'listmenu', 'Inserts jump line into Display List');
     app.addMenuItem('Clone Last Line', cloneLastLine, 'listmenu', 'Duplicate last DL Line');
+    app.addMenuItem('New Jump Line', addJumpLine, 'listmenu', 'Inserts jump line into Display List');
     app.addSeparator('listmenu');
     app.addMenuItem('Clear Display List', clearDL, 'listmenu', 'Deletes all rows');
     app.addSeparator('listmenu');

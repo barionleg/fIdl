@@ -191,7 +191,7 @@ pre {
 }
 
 #crt_view {
-  display: none;
+  
   position: absolute;
   top: 48px;
   left:700px;
@@ -221,7 +221,8 @@ position: relative;
 margin: 0px auto;
 width:320px;
 height: 240px;
-background-color: darkslategrey;
+overflow: hidden;
+
 }
 
 #export_frame {
@@ -230,7 +231,40 @@ background-color: darkslategrey;
   min-height:300px;
 }
 
+.antic_line {
+  width:384;
+  display:block;  
+  clear: both;  
+  overflow: hidden;
+  margin:0;
+}
 
+.antic_line:last-child { border-bottom:1px dotted #666;}
+
+.line_TXT_40x24_2c     { height: 8px; background-image: url('../img/line_TXT_40x24_2c.png'); }
+.line_TXT_40x24_2c_x   { height: 10px; background-image: url('../img/line_TXT_40x24_2c_x.png'); }
+.line_TXT_40x24_5c     { height: 8px; background-image: url('../img/line_TXT_40x24_5c.png'); }
+.line_TXT_40x12_5c     { height: 16px; background-image: url('../img/line_TXT_40x12_5c.png'); }
+.line_TXT_20x24_5c     { height: 8px; background-image: url('../img/line_TXT_20x24_5c.png'); }
+.line_TXT_20x12_5c     { height: 16px; background-image: url('../img/line_TXT_20x12_5c.png'); }
+.line_GFX_40x24_4c     { height: 8px; background-image: url('../img/line_GFX_40x24_4c.png'); }
+.line_GFX_80x48_2c     { height: 4px; background-image: url('../img/line_GFX_80x48_2c.png'); }
+.line_GFX_80x48_4c     { height: 4px; background-image: url('../img/line_GFX_80x48_4c.png'); }
+.line_GFX_160x96_2c    { height: 2px; background-image: url('../img/line_GFX_160x96_2c.png'); }
+.line_GFX_160x96_4c    { height: 2px; background-image: url('../img/line_GFX_160x96_4c.png'); }
+.line_GFX_160x192_2c   { height: 1px; background-image: url('../img/line_GFX_160x192_2c.png'); }
+.line_GFX_160x192_4c   { height: 1px; background-image: url('../img/line_GFX_160x192_4c.png'); }
+.line_GFX_320x192_2c   { height: 1px; background-image: url('../img/line_GFX_320x192_2c.png'); }
+.line_1_BLANK          { height: 1px; }
+.line_2_BLANKS         { height: 2px; }
+.line_3_BLANKS         { height: 3px; }
+.line_4_BLANKS         { height: 4px; }
+.line_5_BLANKS         { height: 5px; }
+.line_6_BLANKS         { height: 6px; }
+.line_7_BLANKS         { height: 7px; }
+.line_8_BLANKS         { height: 8px; }
+.line_JMP              { height: 1px; }
+.line_JVB              { height: 1px; }
 
 .dialog_title {
     position:relative;
