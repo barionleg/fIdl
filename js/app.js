@@ -1,6 +1,6 @@
 const defaultOptions = {
-    version: '0.91',
-    storageName: 'FidlStore091',
+    version: '0.92',
+    storageName: 'FidlStore092',
     screenWidth: 'normal',
     bytesExport: 'HEX',
     bytesPerLine: 10,
@@ -792,6 +792,9 @@ $(document).ready(function () {
     app.addMenuItem('Save binary', saveFile, 'listmenu', 'Saves Display List as a binary file');
     app.addSeparator('listmenu');
     app.addMenuItem('Options', toggleOptions, 'listmenu', 'Shows Options');
+    app.addSeparator('listmenu');
+    const ver = $('<div/>').attr('id','ver').html(`FiDL v.${options.version}`);
+    $('#listmenu').append(ver);
     if (display.list.length > 0) redrawList()
     
     updateListStatus();    

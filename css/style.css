@@ -401,6 +401,11 @@ input:disabled {
   line-height: 1.6em;
 }
 
+#ver {
+  font-size: 12px;
+  font-weight: bolder;
+}
+
 .rowError {
   background-color: rgb(75, 46, 46)!important;
 }
