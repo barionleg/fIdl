@@ -83,6 +83,10 @@ ul.dlist>li {
   width:3em;
 }
 
+i.handle {
+  cursor: grab;
+}
+
 .listRow:first-child>i.arrowUp,
 .listRow:last-child>i.arrowDown {
   opacity: 0;
