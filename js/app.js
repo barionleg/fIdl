@@ -1,9 +1,10 @@
 const defaultOptions = {
-    version: '0.92',
-    storageName: 'FidlStore092',
+    version: '0.95',
+    storageName: 'FidlStore095',
     screenWidth: 'normal',
     bytesExport: 'HEX',
     bytesPerLine: 10,
+    fileSizeLimit: 1,
     validate4KBlockSize: true,
     validateEndJump: true,
     validateFirstLMS: true,
@@ -296,7 +297,7 @@ const clearDL = () => {
     updateListStatus();
 };
 
-const isJump = row => row.hex == '41' || row.hex == '01';
+const isJump = row => row.hex[1] == '1';
 
 const isBlank = row => row.hex[1] == '0' ;
 
@@ -312,9 +313,9 @@ const needsAddress = row => {
 
 const updateSizes = () => {
     $('#sizes').empty()
-        .append(`<p>scanlines: ${display.scanlines}</p>`)
-        .append(`<p>video RAM size: ${display.videoram}</p>`)
-        .append(`<p>DL size: ${display.bytecode.length}</p>`)
+        .append(`<p>scanlines: ${display.scanlines} ($${decimalToHex(display.scanlines)})</p>`)
+        .append(`<p>video RAM size: ${display.videoram} ($${decimalToHex(display.videoram)})</p>`)
+        .append(`<p>DL size: ${display.bytecode.length} ($${decimalToHex(display.bytecode.length)})</p>`)
 }   
 
 const updateAnticWidth = () => {
@@ -351,14 +352,14 @@ const isDecOrHexInteger = v => {
 
 const parseAddress = row => {
     if (_.isInteger(row.address)) {
-      addr = row.address & 0xFFFF;
-      return { lo: addr & 0xFF, hi: (addr & 0xFF00) >> 8 }
+        addr = row.address & 0xFFFF;
+        return { lo: addr & 0xFF, hi: (addr & 0xFF00) >> 8 }
     } 
     if ((typeof row.address === 'string' || row.address instanceof String) && row.address[0] == '$')
     {
-      addr = parseInt(row.address.substring(1), 16) & 0xFFFF;
-      if (!isNaN(addr))
-        return { lo: addr & 0xFF, hi: (addr & 0xFF00) >> 8 }
+        addr = parseInt(row.address.substring(1), 16) & 0xFFFF;
+        if (!isNaN(addr))
+            return { lo: addr & 0xFF, hi: (addr & 0xFF00) >> 8 }
     }
     throw (`Error! Unable to parse address: '${row.address}'. Use decimal value, or hex prefixed with '$'.`);
 }
@@ -412,14 +413,12 @@ const parseAndValidate = (template) => {
         if (!isDecOrHexInteger(line.step)) 
             addError(`Error! Addres step value '${line.step}' is not an integer.`, line.id);
 
-
         display.scanlines += line.scanlines;
         if (options.validateScanlinesLimit) {
             const scanlinesLimit = (options.validateScanlinesNTSC)?scanlinesMaxNTSC:scanlinesMaxPAL;
             if (display.scanlines > scanlinesLimit) 
                 addError(`Error! You have exceeded the maximum number of scanlines! (max. ${scanlinesLimit} lines).`, line.id);
         }
-
 
         display.videoram += line.ram;        
         if (needsAddress(line)) videoram = 0;
@@ -465,8 +464,6 @@ const parseAndValidate = (template) => {
             if (jumpCount>0 && options.validateLineAfterJump) 
                 addError(`Error! Probably unreachable lines after jump detected ${line.mode}`, line.id);
         }
-
-        //if (DLerror) return {error: DLerror, warnings}
 
         if (needsAddress(line) && line.count > 1 && line.step != 0) {  // step
             display.bytecode.push(_.times(line.count, i => {
@@ -572,7 +569,6 @@ const loadDisplay = () => {
 }
 
 const updateOptions = () => {
-
     const opts = _.filter($("select, input"), opt => {
         return _.startsWith($(opt).attr('id'),'opt_');
     });
@@ -632,7 +628,7 @@ const exportData = () => {
     const template = exportTemplates[$('#opt_lastTemplate_i').val()];
     const {error, warnings} = parseAndValidate(template);
     if (error) {
-        $('#export_frame').html(warnings.replace('<br>',''));
+        $('#export_frame').html(warnings.replace(/<br>/g,"\n"));
         return null;
     }
     const body = parseTemplate(template);
@@ -764,21 +760,182 @@ const listRowDragged = (e) => {
     updateListStatus();
 }
 
+const openFile = function (event) {
+    var input = event.target;
+    var file = input.files[0];
+    dropFile(file)
+};
+
+const getModeFromAntic = antic => {
+    return _.findKey(DLmodes,mode=>mode.antic==antic);
+}
+
+const parseBinary = (binData) => {
+
+    const parseError = msg => {
+        alert(msg);
+    }
+    const list = [];
+    const binSize = binData.length;
+    let binPtr = 0;
+    let id = 0;
+    while(binPtr < binSize) {
+        let newRow = true;
+        const opcode = binData[binPtr++];
+        const remains = binSize - binPtr;
+        const row = {
+            hex: decimalToHex(opcode),
+            opcode: opcode,
+            antic: opcode,
+            DLI: opcode & 128,
+            id: id,
+            address: null
+        };
+        if (isJump(row)) {
+            row.mode = getModeFromAntic(opcode & 0x41);
+        }
+        if (isBlank(row)) {
+            row.mode = getModeFromAntic(opcode & 0x70);
+        }
+        if (isScreenLine(row)) {
+            row.LMS = opcode & 64;
+            row.vscroll = opcode & 32;
+            row.hscroll = opcode & 16;
+            row.mode = getModeFromAntic(opcode & 0x0f);
+        }
+        if (!row.mode) {
+            parseError(`Parsing error. Unknown mode: ${opcode}`);
+            return false;
+        }
+        _.assignIn(row, DLmodes[row.mode]);
+
+        if (needsAddress(row)) {
+            if (remains < 2) {
+                parseError('Parsing error. File ended on expected address');
+                return false;
+            }
+            const lbyte = binData[binPtr++];
+            const hbyte = binData[binPtr++];
+            row.address = (hbyte * 256) + lbyte;
+            if (options.bytesExport == 'HEX') row.address = `$${decimalToHex(row.address)}`;
+        }
+        row.count = 1;
+        row.step = '0';
+
+        if (list.length > 0) {                     
+            const last = _.last(list);
+
+            // check for repeats
+            if (last.opcode == row.opcode) {
+                if (last.address == row.address) {
+                    last.count++;
+                    newRow = false;
+                } else {
+                    let laststep = Number(last.step) * last.count;
+                    let curstep = userIntParse(row.address) - userIntParse(last.address);
+                    if (laststep == 0) {
+                        last.count++;
+                        last.step = curstep;
+                        newRow = false;
+                    } else {
+                        if (laststep == curstep) {
+                            last.count++;
+                            newRow = false;
+                        }
+                    }
+                }
+            }
+        } 
+        
+        if (newRow) {
+            list.push(updateModeParams(row));
+            id++;
+        }
+
+        if (options.stopAtJump && isJump(row)) {
+            binPtr = binSize;
+        }
+    }
+    return list;
+}
+
+const dropFile = function (file) {
+    if (file) {
+        var reader = new FileReader();
+        reader.onload = function () {
+            var arrayBuffer = reader.result;
+            if (file.size > (options.fileSizeLimit * 1024)) {
+                alert(`ERROR!!!\n\nFile size limit exceeded. Size: ${file.size} B - limit: ${options.fileSizeLimit} kB`);
+                return false;
+            }
+            const binFileName = file.name;
+            const binFileData = new Uint8Array(arrayBuffer);
+            newList = parseBinary(binFileData);
+            if (newList) {
+                display.list = newList;
+                redrawList();
+                updateListStatus();
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+}
+
+const togglePresets = () => {
+    if ($('#presets_dialog').is(':visible')) {
+        $('#presets_dialog').slideUp();
+    } else {
+        $('#presets_dialog').slideDown();
+    }
+}
+
+const closeAllDialogs = () => {
+    $('div.dialog:visible').slideUp();
+}
+
+const presetChange = () => {
+    const presetIdx = $('#user_presets').val();
+    $('#preset_info').empty();
+    if (presetIdx != '-1') {
+        const preset = dlPresets[presetIdx];
+        let info = preset.desc;
+        if (preset.bytecode) {
+            info = `${info}\nsize: ${preset.bytecode.length} bytes.`
+        }
+        $('#preset_info').html(info.replace(/\n/g,'<br>'));
+    }
+}
+
+const loadPreset = () => {
+    const presetIdx = $('#user_presets').val();
+    if (presetIdx != '-1') {
+        const preset = dlPresets[presetIdx];
+        let newList = _.cloneDeep(preset.list);
+        if (preset.bytecode) {
+            newList = parseBinary(preset.bytecode);
+        }
+        if (newList) {
+            display.list = newList;
+            redrawList();
+            updateListStatus();
+        }
+    }
+    togglePresets();
+}
+
 
 // ************************************************  ON START INIT 
 
 $(document).ready(function () {
-
 
     $('#dlist').sortable({
         handle: '.handle',
         onUpdate: listRowDragged
     });
 
-
     loadOptions();
     loadDisplay();
-    const app = gui(options);
+    const app = gui(options, dropFile);
     refreshOptions();
     $('title').append(` v.${options.version}`);
     app.addMenuItem('New Blank Line', addBlankLine, 'listmenu', 'Inserts blank line into Display List');
@@ -788,17 +945,16 @@ $(document).ready(function () {
     app.addSeparator('listmenu');
     app.addMenuItem('Clear Display List', clearDL, 'listmenu', 'Deletes all rows');
     app.addSeparator('listmenu');
+    app.addMenuFileOpen('Load', openFile, 'listmenu', 'Loads Display List binary file');
+    app.addMenuItem('Save', saveFile, 'listmenu', 'Saves Display List as a binary file');
     app.addMenuItem('Export', toggleExport, 'listmenu', 'Exports Display List to various formats');
-    app.addMenuItem('Save binary', saveFile, 'listmenu', 'Saves Display List as a binary file');
+    app.addMenuItem('Presets', togglePresets, 'listmenu', 'Loads some predefined presets');
     app.addSeparator('listmenu');
     app.addMenuItem('Options', toggleOptions, 'listmenu', 'Shows Options');
     app.addSeparator('listmenu');
     const ver = $('<div/>').attr('id','ver').html(`FiDL v.${options.version}`);
     $('#listmenu').append(ver);
-    if (display.list.length > 0) redrawList()
-    
+    if (display.list.length > 0) redrawList();
     updateListStatus();    
-
-
 
 });

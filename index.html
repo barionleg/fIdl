@@ -59,46 +59,86 @@
       </div>
   </div>
   
+
   <div id='options_dialog' class='dialog'>
       <div class='dialog_title'>Options</div>
       <div class='dialog_content'>
         <div class='dialog_blocks'>
           <div class='dialog_block'>
+
+            <h3>ANTIC Options:</h3>
             <fieldset>
               <label class='dialog_label'>Screen width:</label>
               <select id='opt_screenWidth_s' class='dialog_text_input'>
               </select>
             </fieldset>
             <fieldset>
-              <label class='dialog_label'>Export bytes as:</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateScanlinesNTSC_b'/>Scanlines NTSC limit (224)</label>
+            </fieldset>
+            <hr>
+
+            <h3>Import/Export Options:</h3>
+            <fieldset>
+              <label class='dialog_label'>Show bytes as:</label>
               <select id='opt_bytesExport_s' class='dialog_text_input'>
                   <option value='HEX'>HEX</option>
                   <option value='DEC'>DEC</option>
               </select>
             </fieldset>
+
             <fieldset>
               <label class='dialog_label'>Bytes per line:</label>
               <input type='text' id='opt_bytesPerLine_i' class='dialog_text_input input_narrow'>
             </fieldset>
-            <hr>
-            <h3>Validations:</h3>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateFirstLMS_b'/>First LMS is mandatory</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate4KBlockSize_b'/>4KB block size limit</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate1Kboundary_b'/>1KB boundary crossing</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate64Kaddress_b'/>64KB address range</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateScanlinesLimit_b'/>Validate scanlines limit</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateScanlinesNTSC_b'/>Scanlines NTSC limit (224)</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateEndJump_b'/>Ending jump mandatory</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateMultiJumps_b'/>Warn about multiple jumps</label>
-            <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateLineAfterJump_b'/>Warn about lines after jump</label>
-            <hr>
+
+            <fieldset>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_stopAtJump_b'/>Stop loading on first jump</label>
+            </fieldset>
           </div>
+
+          <div class='dialog_block'>
+            <h3>Validations:</h3>
+            <fieldset>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateFirstLMS_b'/>First LMS is mandatory</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate4KBlockSize_b'/>4KB block size limit</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate1Kboundary_b'/>1KB boundary crossing</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validate64Kaddress_b'/>64KB address range</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateScanlinesLimit_b'/>Validate scanlines limit</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateEndJump_b'/>Ending jump mandatory</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateMultiJumps_b'/>Warn about multiple jumps</label>
+              <label class='dialog_label checkbox_label'><input type='checkbox' id='opt_validateLineAfterJump_b'/>Warn about lines after jump</label>
+            </fieldset>
+          </div>
+
         </div>
+        <hr>
         <div class='menuitem clear_left' id='save_options'>Save</div>
       </div>
   </div>
 
+  <div id='presets_dialog' class='dialog'>
+      <div class='dialog_title'>Presets</div>
+      <div class='dialog_content'>
+        <div class='dialog_blocks'>
+          <div class='dialog_block'>
+            <fieldset>
+              <select id='user_presets' class='dialog_text_input'>
+                <option value='-1'>Select preset...</option>
+              </select>
+            </fieldset>
+            <div id='preset_info'> </div>
+            <hr>
+          </div>
+
+        </div>
+        <div class='menuitem clear_left' id='load_preset'>Load</div>
+        <div class='menuitem' id='close_presets'>Cancel</div>
+      </div>
+  </div>
+
+
   <script src='js/exportTemplates.js' type='text/javascript'></script>
+  <script src='js/presets.js' type='text/javascript'></script>
   <script src='js/modes.js' type='text/javascript'></script>
   <script src='js/gui.js' type='text/javascript'></script>
   <script src='js/app.js' type='text/javascript'></script>
