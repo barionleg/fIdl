@@ -954,6 +954,8 @@ $(document).ready(function () {
     app.addSeparator('listmenu');
     const ver = $('<div/>').attr('id','ver').html(`FiDL v.${options.version}`);
     $('#listmenu').append(ver);
+    const bh = $('<div/>').attr('id','bathub').on('mousedown',()=>{window.location.href='https://bocianu.gitlab.io/bathub/'});
+    $('#listmenu').append(bh);
     if (display.list.length > 0) redrawList();
     updateListStatus();    
 

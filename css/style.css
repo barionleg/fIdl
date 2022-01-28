@@ -430,3 +430,16 @@ input:disabled {
   position: absolute;
   clip: rect( 0, 0, 0, 0 );
 }
+
+#bathub {
+  position: absolute;
+  top:6px;
+  left:1080px;  
+  width: 24px;
+  height: 24px;
+  background-image: url(../img/bathubicon.png);
+  background-size: cover;
+  box-shadow: 2px 2px 2px #000;
+  cursor: pointer;
+  opacity: 0.7;
+}
